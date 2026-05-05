@@ -12,6 +12,9 @@ import { AdminUsersPage } from './pages/AdminUsersPage';
 import { BillingSummaryPage } from './pages/BillingSummaryPage';
 import { AuditLogPage } from './pages/AuditLogPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AgentsPage } from './pages/AgentsPage';
+import { AgentDetailPage } from './pages/AgentDetailPage';
+import { AgentWithdrawalsPage } from './pages/AgentWithdrawalsPage';
 
 export default function App() {
   return (
@@ -32,6 +35,9 @@ export default function App() {
             <Route path="tickets" element={<TicketsPage />} />
             <Route path="tickets/:id" element={<TicketDetailPage />} />
             <Route path="billing" element={<BillingSummaryPage />} />
+            <Route path="agents" element={<AgentsPage />} />
+            <Route path="agents/:id" element={<AgentDetailPage />} />
+            <Route path="agent-withdrawals" element={<AgentWithdrawalsPage />} />
             <Route
               path="admin-users"
               element={

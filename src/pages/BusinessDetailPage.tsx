@@ -1,14 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useAdminAuth } from '../context/AdminAuthContext';
+
+type ReferringAgent = {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  agent_code: string;
+};
 
 type Detail = {
-  company: Record<string, unknown>;
+  company: Record<string, unknown> & {
+    referred_by_agent_id?: number | null;
+    referring_agent?: ReferringAgent | null;
+  };
   owner: Record<string, unknown> | null;
   stores: { id: number; name: string; revenue_30d: number; staff_count: number; seat_count: number }[];
   subscription: Record<string, unknown> | null;
   revenue_30d: number;
   transaction_count_30d: number;
+};
+
+type AgentRow = {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  agent_code: string;
+  is_active: boolean;
 };
 
 type Activity = { type: string; at: string; detail: Record<string, unknown> };
@@ -29,6 +50,7 @@ type InvRow = {
 
 export function BusinessDetailPage() {
   const { id } = useParams();
+  const { admin } = useAdminAuth();
   const [tab, setTab] = useState<'overview' | 'stores' | 'activity' | 'subscription' | 'invoices'>(
     'overview'
   );
@@ -38,18 +60,53 @@ export function BusinessDetailPage() {
   const [invoices, setInvoices] = useState<InvRow[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [agentOptions, setAgentOptions] = useState<AgentRow[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState('');
+  const [attachLoading, setAttachLoading] = useState(false);
+
+  const loadDetail = useCallback(async () => {
+    if (!id) return;
+    const { data } = await api.get<Detail>(`/api/admin/businesses/${id}`);
+    setDetail(data);
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
     (async () => {
-      const { data } = await api.get<Detail>(`/api/admin/businesses/${id}`);
-      if (!cancelled) setDetail(data);
+      try {
+        const { data } = await api.get<Detail>(`/api/admin/businesses/${id}`);
+        if (!cancelled) setDetail(data);
+      } catch {
+        if (!cancelled) setDetail(null);
+      }
     })();
     return () => {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!detail || admin?.role !== 'super_admin') return;
+    const rid = detail.company.referred_by_agent_id;
+    if (rid != null && rid !== undefined) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await api.get<{ items: AgentRow[] }>('/api/admin/agents', {
+          params: { page_size: 200 },
+        });
+        if (!cancelled) {
+          setAgentOptions(data.items.filter((a) => a.is_active));
+        }
+      } catch {
+        if (!cancelled) setAgentOptions([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [detail, admin?.role]);
 
   useEffect(() => {
     if (!id || tab !== 'activity') return;
@@ -87,6 +144,34 @@ export function BusinessDetailPage() {
     }
   }
 
+  async function attachReferringAgent() {
+    if (!id || !selectedAgentId) return;
+    if (
+      !window.confirm(
+        'Attach this referral agent to this business? This can only be done once for each business.'
+      )
+    ) {
+      return;
+    }
+    setErr(null);
+    setMsg(null);
+    setAttachLoading(true);
+    try {
+      await api.patch(`/api/admin/businesses/${id}/referring-agent`, {
+        agent_id: Number(selectedAgentId),
+      });
+      setMsg('Referring agent attached.');
+      setSelectedAgentId('');
+      await loadDetail();
+    } catch (e: unknown) {
+      const ax = e as { response?: { data?: { detail?: string } } };
+      const d = ax.response?.data?.detail;
+      setErr(typeof d === 'string' ? d : 'Failed to attach referring agent.');
+    } finally {
+      setAttachLoading(false);
+    }
+  }
+
   if (!detail) return <p>Loading…</p>;
 
   return (
@@ -109,6 +194,49 @@ export function BusinessDetailPage() {
 
       {tab === 'overview' && (
         <div className="card">
+          <h2 style={{ marginTop: 0 }}>Referring agent</h2>
+          {detail.company.referring_agent ? (
+            <p>
+              <strong>{detail.company.referring_agent.first_name}{' '}
+              {detail.company.referring_agent.last_name}</strong>
+              {' · '}
+              <code>{detail.company.referring_agent.agent_code}</code>
+              {' · '}
+              {detail.company.referring_agent.email}
+              {' · '}
+              <small>id {detail.company.referring_agent.id}</small>
+            </p>
+          ) : (
+            <p>None</p>
+          )}
+          {admin?.role === 'super_admin' && !detail.company.referred_by_agent_id && (
+              <div style={{ marginTop: 12 }}>
+                <label htmlFor="attach-agent" style={{ display: 'block', marginBottom: 8 }}>
+                  Attach agent (super admin only)
+                </label>
+                <select
+                  id="attach-agent"
+                  value={selectedAgentId}
+                  onChange={(e) => setSelectedAgentId(e.target.value)}
+                  style={{ minWidth: 280, marginRight: 8 }}
+                >
+                  <option value="">Select an agent…</option>
+                  {agentOptions.map((a) => (
+                    <option key={a.id} value={String(a.id)}>
+                      {a.first_name} {a.last_name} — {a.agent_code} (id {a.id})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn primary"
+                  disabled={!selectedAgentId || attachLoading}
+                  onClick={() => void attachReferringAgent()}
+                >
+                  {attachLoading ? 'Attaching…' : 'Attach'}
+                </button>
+              </div>
+            )}
           <pre className="json-pre">{JSON.stringify(detail.company, null, 2)}</pre>
           <p>
             <strong>Owner:</strong> {detail.owner ? String(detail.owner.email) : '—'}

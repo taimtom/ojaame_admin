@@ -6,6 +6,8 @@ const nav = [
   { to: '/businesses', label: 'Businesses', roles: ['super_admin', 'support', 'billing_readonly'] },
   { to: '/tickets', label: 'Tickets', roles: ['super_admin', 'support', 'billing_readonly'] },
   { to: '/billing', label: 'Billing', roles: ['super_admin', 'support', 'billing_readonly'] },
+  { to: '/agents', label: 'Agents', roles: ['super_admin', 'support', 'billing_readonly'] },
+  { to: '/agent-withdrawals', label: 'Agent Withdrawals', roles: ['super_admin', 'support'] },
   { to: '/admin-users', label: 'Admin users', roles: ['super_admin'] },
   { to: '/audit-logs', label: 'Audit log', roles: ['super_admin'] },
   { to: '/settings', label: 'Settings', roles: ['super_admin', 'support', 'billing_readonly'] },

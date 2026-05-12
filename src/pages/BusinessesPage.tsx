@@ -9,6 +9,8 @@ type Row = {
   store_count: number;
   staff_count: number;
   seat_count: number;
+  product_count: number;
+  expense_count: number;
   revenue_30d: number;
   subscription_status: string | null;
   created_at: string | null;
@@ -59,6 +61,8 @@ export function BusinessesPage() {
                 <th>Name</th>
                 <th>Owner</th>
                 <th>Stores</th>
+                <th>Products</th>
+                <th>Expenses</th>
                 <th>Rev 30d</th>
                 <th>Subscription</th>
                 <th />
@@ -70,6 +74,8 @@ export function BusinessesPage() {
                   <td>{r.company_name}</td>
                   <td>{r.owner_email}</td>
                   <td>{r.store_count}</td>
+                  <td>{r.product_count}</td>
+                  <td>{r.expense_count}</td>
                   <td>{r.revenue_30d.toFixed(2)}</td>
                   <td>{r.subscription_status ?? '—'}</td>
                   <td>

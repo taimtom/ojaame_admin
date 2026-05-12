@@ -21,6 +21,8 @@ type Detail = {
   subscription: Record<string, unknown> | null;
   revenue_30d: number;
   transaction_count_30d: number;
+  product_count: number;
+  expense_count: number;
 };
 
 type AgentRow = {
@@ -243,6 +245,8 @@ export function BusinessDetailPage() {
           </p>
           <p>
             Revenue 30d: {detail.revenue_30d.toFixed(2)} · Transactions: {detail.transaction_count_30d}
+            {' · '}
+            Products: {detail.product_count} · Expenses: {detail.expense_count}
           </p>
           <button type="button" className="btn primary" onClick={resetPassword}>
             Reset owner password

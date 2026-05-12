@@ -15,6 +15,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { AgentsPage } from './pages/AgentsPage';
 import { AgentDetailPage } from './pages/AgentDetailPage';
 import { AgentWithdrawalsPage } from './pages/AgentWithdrawalsPage';
+import { CatalogPage } from './pages/CatalogPage';
 
 export default function App() {
   return (
@@ -38,6 +39,14 @@ export default function App() {
             <Route path="agents" element={<AgentsPage />} />
             <Route path="agents/:id" element={<AgentDetailPage />} />
             <Route path="agent-withdrawals" element={<AgentWithdrawalsPage />} />
+            <Route
+              path="catalog"
+              element={
+                <RoleGuard allow={['super_admin', 'support']}>
+                  <CatalogPage />
+                </RoleGuard>
+              }
+            />
             <Route
               path="admin-users"
               element={

@@ -24,6 +24,7 @@ type CommissionRow = {
 
 type Totals = {
   total_earned: number;
+  ledger_balance: number;
   total_paid_out: number;
   balance: number;
 };
@@ -108,6 +109,10 @@ export function AgentDetailPage() {
         <div className="stat-card">
           <div className="stat-label">Total Paid Out</div>
           <div className="stat-value">{formatNaira(agent.totals.total_paid_out)}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Ledger (pending unlock)</div>
+          <div className="stat-value">{formatNaira(agent.totals.ledger_balance ?? 0)}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Balance</div>
@@ -196,7 +201,12 @@ export function AgentDetailPage() {
                 <td>{c.commission_type === 'signup_bonus' ? 'Signup Bonus' : 'Monthly Token'}</td>
                 <td>{formatNaira(c.amount)}</td>
                 <td>{c.month_number ?? '—'}</td>
-                <td style={{ color: c.status === 'credited' ? 'green' : '#f57c00' }}>
+                <td style={{ color: (() => {
+                  const s = c.status;
+                  if (s === 'available' || s === 'credited') return 'green';
+                  if (s === 'paid_out') return '#666';
+                  return '#f57c00';
+                })() }}>
                   {c.status}
                 </td>
                 <td>{new Date(c.date).toLocaleDateString()}</td>

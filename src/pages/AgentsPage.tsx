@@ -11,6 +11,7 @@ type AgentRow = {
   is_active: boolean;
   businesses_count: number;
   total_earned: number;
+  ledger_balance?: number;
   total_paid_out: number;
   balance: number;
   created_at: string | null;
@@ -68,6 +69,7 @@ export function AgentsPage() {
                 <th>Status</th>
                 <th>Businesses</th>
                 <th>Total Earned</th>
+                <th>Ledger</th>
                 <th>Paid Out</th>
                 <th>Balance</th>
                 <th>Joined</th>
@@ -76,7 +78,7 @@ export function AgentsPage() {
             <tbody>
               {data.items.length === 0 ? (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center' }}>
+                  <td colSpan={10} style={{ textAlign: 'center' }}>
                     No agents found
                   </td>
                 </tr>
@@ -104,6 +106,7 @@ export function AgentsPage() {
                     </td>
                     <td>{a.businesses_count}</td>
                     <td>{formatNaira(a.total_earned)}</td>
+                    <td>{formatNaira(a.ledger_balance ?? 0)}</td>
                     <td>{formatNaira(a.total_paid_out)}</td>
                     <td style={{ fontWeight: 600 }}>{formatNaira(a.balance)}</td>
                     <td>{a.created_at ? new Date(a.created_at).toLocaleDateString() : '—'}</td>

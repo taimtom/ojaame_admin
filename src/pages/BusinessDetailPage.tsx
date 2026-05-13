@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { BusinessBulkProductsPanel } from '../components/BusinessBulkProductsPanel';
 import { api } from '../lib/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
@@ -53,9 +54,9 @@ type InvRow = {
 export function BusinessDetailPage() {
   const { id } = useParams();
   const { admin } = useAdminAuth();
-  const [tab, setTab] = useState<'overview' | 'stores' | 'activity' | 'subscription' | 'invoices'>(
-    'overview'
-  );
+  const [tab, setTab] = useState<
+    'overview' | 'stores' | 'bulk_products' | 'activity' | 'subscription' | 'invoices'
+  >('overview');
   const [detail, setDetail] = useState<Detail | null>(null);
   const [activity, setActivity] = useState<Activity[]>([]);
   const [sub, setSub] = useState<SubExtra | null>(null);
@@ -180,14 +181,23 @@ export function BusinessDetailPage() {
     <div>
       <h1>{String(detail.company.companyName ?? '')}</h1>
       <div className="tabs">
-        {(['overview', 'stores', 'activity', 'subscription', 'invoices'] as const).map((t) => (
+        {(
+          [
+            'overview',
+            'stores',
+            'bulk_products',
+            'activity',
+            'subscription',
+            'invoices',
+          ] as const
+        ).map((t) => (
           <button
             key={t}
             type="button"
             className={tab === t ? 'tab active' : 'tab'}
             onClick={() => setTab(t)}
           >
-            {t}
+            {t === 'bulk_products' ? 'bulk products' : t}
           </button>
         ))}
       </div>
@@ -252,6 +262,10 @@ export function BusinessDetailPage() {
             Reset owner password
           </button>
         </div>
+      )}
+
+      {tab === 'bulk_products' && id && (
+        <BusinessBulkProductsPanel companyId={id} stores={detail.stores} />
       )}
 
       {tab === 'stores' && (

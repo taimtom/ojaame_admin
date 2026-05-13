@@ -17,7 +17,13 @@ type Detail = {
     referred_by_agent_id?: number | null;
     referring_agent?: ReferringAgent | null;
   };
-  owner: Record<string, unknown> | null;
+  owner: {
+    user_id: number;
+    email: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    phoneNumber?: string | null;
+  } | null;
   stores: { id: number; name: string; revenue_30d: number; staff_count: number; seat_count: number }[];
   subscription: Record<string, unknown> | null;
   revenue_30d: number;
@@ -176,6 +182,11 @@ export function BusinessDetailPage() {
   }
 
   if (!detail) return <p>Loading…</p>;
+  const ownerName = detail.owner
+    ? [detail.owner.firstName, detail.owner.lastName].filter(Boolean).join(' ').trim()
+    : '';
+  const ownerEmail = detail.owner?.email ?? null;
+  const ownerPhone = detail.owner?.phoneNumber ?? null;
 
   return (
     <div>
@@ -251,7 +262,13 @@ export function BusinessDetailPage() {
             )}
           <pre className="json-pre">{JSON.stringify(detail.company, null, 2)}</pre>
           <p>
-            <strong>Owner:</strong> {detail.owner ? String(detail.owner.email) : '—'}
+            <strong>Owner:</strong> {ownerName || '—'}
+          </p>
+          <p>
+            <strong>Owner email:</strong> {ownerEmail || '—'}
+          </p>
+          <p>
+            <strong>Owner phone:</strong> {ownerPhone || '—'}
           </p>
           <p>
             Revenue 30d: {detail.revenue_30d.toFixed(2)} · Transactions: {detail.transaction_count_30d}

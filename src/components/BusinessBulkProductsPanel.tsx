@@ -302,7 +302,7 @@ export function BusinessBulkProductsPanel({ companyId, stores }: Props) {
         <h3 style={{ marginTop: 0 }}>Paste from spreadsheet</h3>
         <p className="muted" style={{ marginTop: 0 }}>
           Tab-separated or CSV lines without headers: Name, Category, Qty, Cost Price, Selling Price, Is Pack,
-          Qty per Pack, Cost per Pack.
+          Qty per Pack, Cost per Pack, Pack Sell Price (optional).
         </p>
         <textarea
           className="search"

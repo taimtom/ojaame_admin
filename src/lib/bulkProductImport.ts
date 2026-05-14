@@ -152,6 +152,7 @@ const POSITIONAL_KEYS = [
   'Is Pack',
   'Qty per Pack',
   'Cost per Pack',
+  'Pack Sell Price',
 ] as const;
 
 function parseCsvLine(line: string): string[] {
@@ -239,6 +240,14 @@ export function mapRecordToBulkRow(
     'units in pack'
   );
   const costPerPack = pick(record, 'cost per pack', 'pack cost', 'purchase cost per pack');
+  const packSellPrice = pick(
+    record,
+    'pack sell price',
+    'pack selling price',
+    'optional pack price',
+    'whole pack price',
+    'pack sale price'
+  );
 
   let isPack = parseBool(pick(record, 'is pack', 'pack', 'pack product', 'packed'));
   if (!isPack && qPerPack && Number(qPerPack) > 0 && costPerPack !== '' && Number(costPerPack) >= 0) {
@@ -278,6 +287,7 @@ export function mapRecordToBulkRow(
     is_pack: isPack && !prodInput,
     quantity_per_pack: qPerPack,
     cost_price_per_pack: costPerPack,
+    pack_sell_price: packSellPrice,
     allow_variable_price: allowVar && !prodInput,
     variable_price_min: vmin,
     variable_price_max: vmax,

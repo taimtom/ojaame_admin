@@ -3,6 +3,11 @@ import { useParams } from 'react-router-dom';
 import { BusinessBulkProductsPanel } from '../components/BusinessBulkProductsPanel';
 import { api } from '../lib/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import {
+  SIGNUP_METHODS,
+  signupMethodLabel,
+  type SignupMethod,
+} from '../lib/signupMethod';
 
 type ReferringAgent = {
   id: number;
@@ -16,6 +21,7 @@ type Detail = {
   company: Record<string, unknown> & {
     referred_by_agent_id?: number | null;
     referring_agent?: ReferringAgent | null;
+    signup_method?: string;
   };
   owner: {
     user_id: number;
@@ -93,11 +99,17 @@ export function BusinessDetailPage() {
   const [subPatchLoading, setSubPatchLoading] = useState(false);
   const [newStoreName, setNewStoreName] = useState('');
   const [storeCreateLoading, setStoreCreateLoading] = useState(false);
+  const [signupMethodDraft, setSignupMethodDraft] = useState<SignupMethod>('default');
+  const [signupMethodLoading, setSignupMethodLoading] = useState(false);
 
   const loadDetail = useCallback(async () => {
     if (!id) return;
     const { data } = await api.get<Detail>(`/api/admin/businesses/${id}`);
     setDetail(data);
+    const sm = data.company.signup_method;
+    if (sm && SIGNUP_METHODS.includes(sm as SignupMethod)) {
+      setSignupMethodDraft(sm as SignupMethod);
+    }
   }, [id]);
 
   const loadSetup = useCallback(async () => {
@@ -116,7 +128,13 @@ export function BusinessDetailPage() {
     (async () => {
       try {
         const { data } = await api.get<Detail>(`/api/admin/businesses/${id}`);
-        if (!cancelled) setDetail(data);
+        if (!cancelled) {
+          setDetail(data);
+          const sm = data.company.signup_method;
+          if (sm && SIGNUP_METHODS.includes(sm as SignupMethod)) {
+            setSignupMethodDraft(sm as SignupMethod);
+          }
+        }
       } catch {
         if (!cancelled) setDetail(null);
       }
@@ -272,6 +290,27 @@ export function BusinessDetailPage() {
     }
   }
 
+  async function updateSignupMethod() {
+    if (!id) return;
+    setErr(null);
+    setMsg(null);
+    setSignupMethodLoading(true);
+    try {
+      const { data } = await api.patch<{ signup_method: string }>(
+        `/api/admin/businesses/${id}/signup-method`,
+        { signup_method: signupMethodDraft }
+      );
+      setMsg(`Signup method set to ${signupMethodLabel(data.signup_method)}.`);
+      await loadDetail();
+    } catch (e: unknown) {
+      const ax = e as { response?: { data?: { detail?: string } } };
+      const d = ax.response?.data?.detail;
+      setErr(typeof d === 'string' ? d : 'Failed to update signup method.');
+    } finally {
+      setSignupMethodLoading(false);
+    }
+  }
+
   async function attachReferringAgent() {
     if (!id || !selectedAgentId) return;
     if (
@@ -381,6 +420,50 @@ export function BusinessDetailPage() {
                 </button>
               </div>
             )}
+        </div>
+      )}
+
+      {tab === 'overview' && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h2 style={{ marginTop: 0 }}>Signup method</h2>
+          <p>
+            Current:{' '}
+            <strong>{signupMethodLabel(String(detail.company.signup_method ?? 'default'))}</strong>
+          </p>
+          {admin?.role !== 'billing_readonly' && (
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <label htmlFor="signup-method" style={{ marginRight: 4 }}>
+                Change to
+              </label>
+              <select
+                id="signup-method"
+                value={signupMethodDraft}
+                onChange={(e) => setSignupMethodDraft(e.target.value as SignupMethod)}
+                style={{ minWidth: 200 }}
+              >
+                {SIGNUP_METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {signupMethodLabel(m)}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="btn primary"
+                disabled={
+                  signupMethodLoading ||
+                  signupMethodDraft === String(detail.company.signup_method ?? 'default')
+                }
+                onClick={() => void updateSignupMethod()}
+              >
+                {signupMethodLoading ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          )}
+          <p className="muted" style={{ marginTop: 8, marginBottom: 0 }}>
+            New businesses from admin create get &quot;Admin onboard&quot;; self-signup gets
+            &quot;Self signup&quot;. Use &quot;Demo business&quot; for manual demo accounts.
+          </p>
         </div>
       )}
 

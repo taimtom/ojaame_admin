@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import {
+  SIGNUP_METHODS,
+  signupMethodLabel,
+  type SignupMethod,
+} from '../lib/signupMethod';
 
 type Row = {
   id: number;
@@ -13,11 +18,13 @@ type Row = {
   expense_count: number;
   revenue_30d: number;
   subscription_status: string | null;
+  signup_method: string;
   created_at: string | null;
 };
 
 export function BusinessesPage() {
   const [q, setQ] = useState('');
+  const [signupFilter, setSignupFilter] = useState<'' | SignupMethod>('');
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +34,12 @@ export function BusinessesPage() {
       setLoading(true);
       try {
         const { data } = await api.get<Row[]>('/api/admin/businesses', {
-          params: { search: q || undefined, page: 1, page_size: 50 },
+          params: {
+            search: q || undefined,
+            signup_method: signupFilter || undefined,
+            page: 1,
+            page_size: 50,
+          },
         });
         if (!cancelled) setRows(data);
       } finally {
@@ -37,7 +49,7 @@ export function BusinessesPage() {
     return () => {
       cancelled = true;
     };
-  }, [q]);
+  }, [q, signupFilter]);
 
   return (
     <div>
@@ -50,6 +62,18 @@ export function BusinessesPage() {
           onChange={(e) => setQ(e.target.value)}
           className="search"
         />
+        <select
+          value={signupFilter}
+          onChange={(e) => setSignupFilter(e.target.value as '' | SignupMethod)}
+          aria-label="Filter by signup method"
+        >
+          <option value="">All signup methods</option>
+          {SIGNUP_METHODS.map((m) => (
+            <option key={m} value={m}>
+              {signupMethodLabel(m)}
+            </option>
+          ))}
+        </select>
         <Link to="/businesses/new" className="btn primary">
           Create business
         </Link>
@@ -68,6 +92,7 @@ export function BusinessesPage() {
                 <th>Expenses</th>
                 <th>Rev 30d</th>
                 <th>Subscription</th>
+                <th>Signup</th>
                 <th />
               </tr>
             </thead>
@@ -81,6 +106,7 @@ export function BusinessesPage() {
                   <td>{r.expense_count}</td>
                   <td>{r.revenue_30d.toFixed(2)}</td>
                   <td>{r.subscription_status ?? '—'}</td>
+                  <td>{signupMethodLabel(r.signup_method)}</td>
                   <td>
                     <Link to={`/businesses/${r.id}`}>View</Link>
                   </td>

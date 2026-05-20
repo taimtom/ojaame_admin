@@ -5,6 +5,7 @@ import { AppLayout } from './components/AppLayout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { BusinessesPage } from './pages/BusinessesPage';
+import { CreateBusinessPage } from './pages/CreateBusinessPage';
 import { BusinessDetailPage } from './pages/BusinessDetailPage';
 import { TicketsPage } from './pages/TicketsPage';
 import { TicketDetailPage } from './pages/TicketDetailPage';
@@ -32,6 +33,7 @@ export default function App() {
           >
             <Route index element={<DashboardPage />} />
             <Route path="businesses" element={<BusinessesPage />} />
+            <Route path="businesses/new" element={<CreateBusinessPage />} />
             <Route path="businesses/:id" element={<BusinessDetailPage />} />
             <Route path="tickets" element={<TicketsPage />} />
             <Route path="tickets/:id" element={<TicketDetailPage />} />

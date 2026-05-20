@@ -50,6 +50,9 @@ export function BusinessesPage() {
           onChange={(e) => setQ(e.target.value)}
           className="search"
         />
+        <Link to="/businesses/new" className="btn primary">
+          Create business
+        </Link>
       </div>
       {loading ? (
         <p>Loading…</p>

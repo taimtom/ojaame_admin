@@ -57,6 +57,21 @@ type InvRow = {
   status: string;
 };
 
+type SetupStatus = {
+  company_id: number;
+  company_name: string;
+  owner_active: boolean;
+  owner_invite_pending: boolean;
+  invitation_link: string | null;
+  owner_email: string | null;
+  store_count: number;
+  product_count: number;
+  subscription_status: string | null;
+  next_billing_date: string | null;
+  trial_days_remaining: number;
+  has_payment_method: boolean;
+};
+
 export function BusinessDetailPage() {
   const { id } = useParams();
   const { admin } = useAdminAuth();
@@ -72,11 +87,27 @@ export function BusinessDetailPage() {
   const [agentOptions, setAgentOptions] = useState<AgentRow[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState('');
   const [attachLoading, setAttachLoading] = useState(false);
+  const [setup, setSetup] = useState<SetupStatus | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [extendDays, setExtendDays] = useState(14);
+  const [subPatchLoading, setSubPatchLoading] = useState(false);
+  const [newStoreName, setNewStoreName] = useState('');
+  const [storeCreateLoading, setStoreCreateLoading] = useState(false);
 
   const loadDetail = useCallback(async () => {
     if (!id) return;
     const { data } = await api.get<Detail>(`/api/admin/businesses/${id}`);
     setDetail(data);
+  }, [id]);
+
+  const loadSetup = useCallback(async () => {
+    if (!id) return;
+    try {
+      const { data } = await api.get<SetupStatus>(`/api/admin/businesses/${id}/setup-status`);
+      setSetup(data);
+    } catch {
+      setSetup(null);
+    }
   }, [id]);
 
   useEffect(() => {
@@ -94,6 +125,11 @@ export function BusinessDetailPage() {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    void loadSetup();
+  }, [id, loadSetup]);
 
   useEffect(() => {
     if (!detail || admin?.role !== 'super_admin') return;
@@ -150,6 +186,89 @@ export function BusinessDetailPage() {
       setMsg(data.message);
     } catch {
       setErr('Failed to trigger reset.');
+    }
+  }
+
+  async function resendOwnerInvite() {
+    if (!id || !window.confirm('Resend owner invitation email?')) return;
+    setErr(null);
+    setMsg(null);
+    setInviteLoading(true);
+    try {
+      const { data } = await api.post<{ message: string; invitation_link: string }>(
+        `/api/admin/businesses/${id}/resend-owner-invite`
+      );
+      setMsg(data.message);
+      await loadSetup();
+    } catch (e: unknown) {
+      const ax = e as { response?: { data?: { detail?: string } } };
+      const d = ax.response?.data?.detail;
+      setErr(typeof d === 'string' ? d : 'Failed to resend invite.');
+    } finally {
+      setInviteLoading(false);
+    }
+  }
+
+  async function copyInviteLink() {
+    const link = setup?.invitation_link;
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      setMsg('Invite link copied.');
+    } catch {
+      setErr('Could not copy link.');
+    }
+  }
+
+  async function createStore() {
+    if (!id || !newStoreName.trim()) return;
+    setErr(null);
+    setMsg(null);
+    setStoreCreateLoading(true);
+    try {
+      await api.post(`/api/admin/businesses/${id}/stores`, {
+        store_name: newStoreName.trim(),
+      });
+      setMsg('Store created.');
+      setNewStoreName('');
+      await loadDetail();
+      await loadSetup();
+    } catch (e: unknown) {
+      const ax = e as { response?: { data?: { detail?: string } } };
+      const d = ax.response?.data?.detail;
+      setErr(typeof d === 'string' ? d : 'Failed to create store.');
+    } finally {
+      setStoreCreateLoading(false);
+    }
+  }
+
+  async function extendTrial() {
+    if (!id) return;
+    setErr(null);
+    setMsg(null);
+    setSubPatchLoading(true);
+    try {
+      const { data } = await api.patch<{ next_billing_date: string | null }>(
+        `/api/admin/businesses/${id}/subscription`,
+        { extend_trial_days: extendDays }
+      );
+      setMsg(
+        data.next_billing_date
+          ? `Trial extended. Next billing: ${new Date(data.next_billing_date).toLocaleString()}`
+          : 'Subscription updated.'
+      );
+      await loadDetail();
+      await loadSetup();
+      if (tab === 'subscription') {
+        const { data: subData } = await api.get<SubExtra>(`/api/admin/businesses/${id}/subscription`);
+        setSub(subData);
+      }
+    } catch (e: unknown) {
+      const ax = e as { response?: { data?: { detail?: string } } };
+      const d = ax.response?.data?.detail;
+      setErr(typeof d === 'string' ? d : 'Failed to update subscription.');
+    } finally {
+      setSubPatchLoading(false);
     }
   }
 
@@ -214,6 +333,56 @@ export function BusinessDetailPage() {
       </div>
       {msg && <p className="success">{msg}</p>}
       {err && <p className="error">{err}</p>}
+
+      {tab === 'overview' && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h2 style={{ marginTop: 0 }}>Setup checklist</h2>
+          {setup ? (
+            <ul className="list" style={{ listStyle: 'none', padding: 0 }}>
+              <li>{setup.owner_active ? '✓' : '○'} Owner signed up</li>
+              <li>{setup.store_count > 0 ? '✓' : '○'} Store created ({setup.store_count})</li>
+              <li>
+                {setup.product_count > 0 ? '✓' : '○'} Products loaded ({setup.product_count})
+              </li>
+              <li>{setup.has_payment_method ? '✓' : '○'} Payment method on file</li>
+              <li>
+                Trial / first billing:{' '}
+                {setup.next_billing_date
+                  ? new Date(setup.next_billing_date).toLocaleString()
+                  : '—'}
+                {setup.trial_days_remaining > 0 && (
+                  <span className="muted"> ({setup.trial_days_remaining} days left)</span>
+                )}
+              </li>
+            </ul>
+          ) : (
+            <p className="muted">Loading setup status…</p>
+          )}
+          {setup?.owner_invite_pending &&
+            setup.invitation_link &&
+            admin?.role !== 'billing_readonly' && (
+              <div style={{ marginTop: 12 }}>
+                <p>
+                  <strong>Pending owner invite</strong> — {setup.owner_email}
+                </p>
+                <code style={{ wordBreak: 'break-all', display: 'block', marginBottom: 8 }}>
+                  {setup.invitation_link}
+                </code>
+                <button type="button" className="btn" onClick={() => void copyInviteLink()}>
+                  Copy link
+                </button>{' '}
+                <button
+                  type="button"
+                  className="btn primary"
+                  disabled={inviteLoading}
+                  onClick={() => void resendOwnerInvite()}
+                >
+                  {inviteLoading ? 'Sending…' : 'Resend invite'}
+                </button>
+              </div>
+            )}
+        </div>
+      )}
 
       {tab === 'overview' && (
         <div className="card">
@@ -286,6 +455,30 @@ export function BusinessDetailPage() {
       )}
 
       {tab === 'stores' && (
+        <>
+        {admin?.role !== 'billing_readonly' && (
+          <div className="card" style={{ marginBottom: 16 }}>
+            <h2 style={{ marginTop: 0 }}>Add store</h2>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <label>
+                Store name
+                <input
+                  value={newStoreName}
+                  onChange={(e) => setNewStoreName(e.target.value)}
+                  style={{ display: 'block', marginTop: 4, minWidth: 240 }}
+                />
+              </label>
+              <button
+                type="button"
+                className="btn primary"
+                disabled={storeCreateLoading || !newStoreName.trim()}
+                onClick={() => void createStore()}
+              >
+                {storeCreateLoading ? 'Creating…' : 'Create store'}
+              </button>
+            </div>
+          </div>
+        )}
         <div className="table-wrap">
           <table className="table">
             <thead>
@@ -308,6 +501,7 @@ export function BusinessDetailPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {tab === 'activity' && (
@@ -322,7 +516,50 @@ export function BusinessDetailPage() {
 
       {tab === 'subscription' && sub && (
         <div className="card">
-          <pre className="json-pre">{JSON.stringify(sub, null, 2)}</pre>
+          {detail.subscription && (
+            <div style={{ marginBottom: 16 }}>
+              <p>
+                <strong>Status:</strong> {String(detail.subscription.status ?? '—')}
+              </p>
+              <p>
+                <strong>Trial / next billing:</strong>{' '}
+                {detail.subscription.next_billing_date
+                  ? new Date(String(detail.subscription.next_billing_date)).toLocaleString()
+                  : '—'}
+              </p>
+              {setup && setup.trial_days_remaining > 0 && (
+                <p className="muted">{setup.trial_days_remaining} days until first charge</p>
+              )}
+              {admin?.role !== 'billing_readonly' && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <label>
+                    Extend trial by
+                    <input
+                      type="number"
+                      min={1}
+                      max={365}
+                      value={extendDays}
+                      onChange={(e) => setExtendDays(Number(e.target.value) || 14)}
+                      style={{ width: 64, marginLeft: 8 }}
+                    />{' '}
+                    days
+                  </label>
+                  <button
+                    type="button"
+                    className="btn primary"
+                    disabled={subPatchLoading}
+                    onClick={() => void extendTrial()}
+                  >
+                    {subPatchLoading ? 'Updating…' : 'Extend trial'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          <details>
+            <summary>Raw subscription JSON</summary>
+            <pre className="json-pre">{JSON.stringify(sub, null, 2)}</pre>
+          </details>
         </div>
       )}
 

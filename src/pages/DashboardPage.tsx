@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Line,
   LineChart,
@@ -25,22 +26,38 @@ type Stats = {
 
 type TsPoint = { bucket: string; revenue: number; transactions: number };
 
+type ProspectRow = {
+  id: number;
+  shop_name: string;
+  percent: number;
+  next_step_label: string | null;
+};
+
 export function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [ts, setTs] = useState<TsPoint[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [activeProspects, setActiveProspects] = useState<ProspectRow[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [s, t] = await Promise.all([
+        const [s, t, prospects] = await Promise.all([
           api.get<Stats>('/api/admin/stats', { params: { period: '30d' } }),
           api.get<TsPoint[]>('/api/admin/stats/timeseries', { params: { period: '30d' } }),
+          api
+            .get<ProspectRow[]>('/api/admin/prospects', {
+              params: { status: 'active', page_size: 50 },
+            })
+            .catch(() => ({ data: [] as ProspectRow[] })),
         ]);
         if (!cancelled) {
           setStats(s.data);
           setTs(t.data);
+          setActiveProspects(
+            prospects.data.filter((p) => p.percent < 100 && p.next_step_label)
+          );
         }
       } catch (e: unknown) {
         if (!cancelled) setError('Could not load dashboard.');
@@ -58,6 +75,24 @@ export function DashboardPage() {
     <div>
       <h1>Dashboard</h1>
       <p className="muted">{stats.note}</p>
+      {activeProspects.length > 0 && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h2 style={{ marginTop: 0 }}>Prospects needing action</h2>
+          <p className="muted">{activeProspects.length} active prospect(s) with next steps</p>
+          <ul className="list" style={{ listStyle: 'none', padding: 0 }}>
+            {activeProspects.slice(0, 5).map((p) => (
+              <li key={p.id} style={{ marginBottom: 8 }}>
+                <Link to={`/prospects/${p.id}`}>
+                  {p.shop_name} — {p.percent}% — next: {p.next_step_label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link to="/prospects" className="btn ghost">
+            View all prospects
+          </Link>
+        </div>
+      )}
       <div className="grid cards">
         <div className="card stat">
           <div className="label">Businesses</div>

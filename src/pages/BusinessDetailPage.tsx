@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { BusinessBulkProductsPanel } from '../components/BusinessBulkProductsPanel';
+import { PlaybookChecklist } from '../components/PlaybookChecklist';
+import { PlaybookCelebration } from '../components/PlaybookCelebration';
+import { PlaybookProgressRing } from '../components/PlaybookProgressRing';
 import { api } from '../lib/api';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import {
+  shouldShowCelebration,
+  type PlaybookProgress,
+} from '../lib/salesPlaybook';
 import {
   SIGNUP_METHODS,
   signupMethodLabel,
@@ -101,6 +108,11 @@ export function BusinessDetailPage() {
   const [storeCreateLoading, setStoreCreateLoading] = useState(false);
   const [signupMethodDraft, setSignupMethodDraft] = useState<SignupMethod>('default');
   const [signupMethodLoading, setSignupMethodLoading] = useState(false);
+  const [playbook, setPlaybook] = useState<(PlaybookProgress & { prospect_id?: number }) | null>(
+    null
+  );
+  const [playbookErr, setPlaybookErr] = useState<string | null>(null);
+  const [celebrate, setCelebrate] = useState(false);
 
   const loadDetail = useCallback(async () => {
     if (!id) return;
@@ -148,6 +160,56 @@ export function BusinessDetailPage() {
     if (!id) return;
     void loadSetup();
   }, [id, loadSetup]);
+
+  const loadPlaybook = useCallback(async () => {
+    if (!id) return;
+    setPlaybookErr(null);
+    try {
+      const { data } = await api.get<PlaybookProgress & { prospect_id?: number }>(
+        `/api/admin/businesses/${id}/playbook`
+      );
+      setPlaybook(data);
+      if (shouldShowCelebration('company', Number(id), data.just_completed)) {
+        setCelebrate(true);
+      }
+    } catch {
+      setPlaybook(null);
+      setPlaybookErr('No field-sales playbook linked to this business.');
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (!id || tab !== 'overview') return;
+    void loadPlaybook();
+  }, [id, tab, loadPlaybook]);
+
+  async function markPlaybookStep(stepKey: string) {
+    if (!id) return;
+    try {
+      const { data } = await api.post<{ playbook: PlaybookProgress & { prospect_id?: number } }>(
+        `/api/admin/businesses/${id}/playbook/steps/${stepKey}`,
+        {}
+      );
+      setPlaybook(data.playbook);
+      if (shouldShowCelebration('company', Number(id), data.playbook.just_completed)) {
+        setCelebrate(true);
+      }
+    } catch {
+      setErr('Failed to update playbook step.');
+    }
+  }
+
+  async function undoPlaybookStep(stepKey: string) {
+    if (!id) return;
+    try {
+      const { data } = await api.delete<{ playbook: PlaybookProgress & { prospect_id?: number } }>(
+        `/api/admin/businesses/${id}/playbook/steps/${stepKey}`
+      );
+      setPlaybook(data.playbook);
+    } catch {
+      setErr('Could not undo step.');
+    }
+  }
 
   useEffect(() => {
     if (!detail || admin?.role !== 'super_admin') return;
@@ -348,6 +410,13 @@ export function BusinessDetailPage() {
 
   return (
     <div>
+      <PlaybookCelebration
+        open={celebrate}
+        shopName={String(detail.company.companyName ?? '')}
+        kind="company"
+        resourceId={Number(id)}
+        onClose={() => setCelebrate(false)}
+      />
       <h1>{String(detail.company.companyName ?? '')}</h1>
       <div className="tabs">
         {(
@@ -425,6 +494,43 @@ export function BusinessDetailPage() {
 
       {tab === 'overview' && (
         <div className="card" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+            <h2 style={{ marginTop: 0, flex: 1 }}>Sales playbook</h2>
+            {playbook && <PlaybookProgressRing percent={playbook.percent} size={64} />}
+          </div>
+          {playbookErr && !playbook && <p className="muted">{playbookErr}</p>}
+          {playbook && (
+            <>
+              {playbook.prospect_id && (
+                <p>
+                  <Link to={`/prospects/${playbook.prospect_id}`}>View prospect record →</Link>
+                </p>
+              )}
+              <p>
+                <Link to="/sales-guide">Field sales guide (scripts & templates)</Link>
+              </p>
+              <PlaybookChecklist
+                playbook={playbook}
+                converted
+                readOnly={admin?.role === 'billing_readonly'}
+                onMarkDone={(key) => void markPlaybookStep(key)}
+                onUndo={(key) => void undoPlaybookStep(key)}
+                onCopyScript={async (t) => {
+                  try {
+                    await navigator.clipboard.writeText(t);
+                    setMsg('Copied to clipboard.');
+                  } catch {
+                    setErr('Could not copy.');
+                  }
+                }}
+              />
+            </>
+          )}
+        </div>
+      )}
+
+      {tab === 'overview' && (
+        <div className="card" style={{ marginBottom: 16 }}>
           <h2 style={{ marginTop: 0 }}>Signup method</h2>
           <p>
             Current:{' '}
@@ -461,8 +567,8 @@ export function BusinessDetailPage() {
             </div>
           )}
           <p className="muted" style={{ marginTop: 8, marginBottom: 0 }}>
-            New businesses from admin create get &quot;Admin onboard&quot;; self-signup gets
-            &quot;Self signup&quot;. Use &quot;Demo business&quot; for manual demo accounts.
+            New businesses from admin create get &quot;Admin onboard&quot;; field visits from
+            Prospects get &quot;Field sales&quot;. Use &quot;Demo business&quot; for demo accounts.
           </p>
         </div>
       )}

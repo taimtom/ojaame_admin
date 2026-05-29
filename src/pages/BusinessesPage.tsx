@@ -81,7 +81,19 @@ export function BusinessesPage() {
       {loading ? (
         <p>Loading…</p>
       ) : (
-        <div className="table-wrap">
+        <>
+        <div className="prospect-cards hide-desktop">
+          {rows.map((r) => (
+            <Link key={r.id} to={`/businesses/${r.id}`} className="prospect-card card">
+              <strong>{r.company_name}</strong>
+              <p className="muted">{r.owner_email ?? '—'}</p>
+              <p className="muted">
+                {r.store_count} stores · {r.product_count} products · {signupMethodLabel(r.signup_method)}
+              </p>
+            </Link>
+          ))}
+        </div>
+        <div className="table-wrap hide-mobile">
           <table className="table">
             <thead>
               <tr>
@@ -115,6 +127,7 @@ export function BusinessesPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

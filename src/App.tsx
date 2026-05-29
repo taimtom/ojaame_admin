@@ -17,6 +17,11 @@ import { AgentsPage } from './pages/AgentsPage';
 import { AgentDetailPage } from './pages/AgentDetailPage';
 import { AgentWithdrawalsPage } from './pages/AgentWithdrawalsPage';
 import { CatalogPage } from './pages/CatalogPage';
+import { ProspectsPage } from './pages/ProspectsPage';
+import { ProspectFormPage } from './pages/ProspectFormPage';
+import { ProspectDetailPage } from './pages/ProspectDetailPage';
+import { ConvertProspectPage } from './pages/ConvertProspectPage';
+import { SalesGuidePage } from './pages/SalesGuidePage';
 
 export default function App() {
   return (
@@ -32,6 +37,46 @@ export default function App() {
             }
           >
             <Route index element={<DashboardPage />} />
+            <Route
+              path="prospects"
+              element={
+                <RoleGuard allow={['super_admin', 'support']}>
+                  <ProspectsPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="prospects/new"
+              element={
+                <RoleGuard allow={['super_admin', 'support']}>
+                  <ProspectFormPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="prospects/:id/convert"
+              element={
+                <RoleGuard allow={['super_admin', 'support']}>
+                  <ConvertProspectPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="prospects/:id"
+              element={
+                <RoleGuard allow={['super_admin', 'support']}>
+                  <ProspectDetailPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="sales-guide"
+              element={
+                <RoleGuard allow={['super_admin', 'support']}>
+                  <SalesGuidePage />
+                </RoleGuard>
+              }
+            />
             <Route path="businesses" element={<BusinessesPage />} />
             <Route path="businesses/new" element={<CreateBusinessPage />} />
             <Route path="businesses/:id" element={<BusinessDetailPage />} />

@@ -315,3 +315,416 @@ h1 {
 .list {
   padding-left: 18px;
 }
+
+/* Touch-friendly controls */
+.btn,
+.navlink,
+.tab,
+.form-card input,
+.form-card select,
+.form-card textarea,
+.search {
+  min-height: 44px;
+}
+
+.btn-sm {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.main-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #1e293b;
+  background: #020617;
+}
+
+.top-bar-title {
+  font-weight: 700;
+}
+
+.menu-toggle {
+  min-width: 44px;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+/* Playbook */
+.playbook-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.playbook-phase-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.playbook-phase.dimmed {
+  opacity: 0.45;
+}
+
+.playbook-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.playbook-step {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid #334155;
+}
+
+.playbook-step.done {
+  opacity: 0.85;
+}
+
+.playbook-step-main {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+}
+
+.playbook-step-check {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.playbook-step.done .playbook-step-check {
+  color: #4ade80;
+}
+
+.playbook-step-meta {
+  display: block;
+  font-size: 12px;
+}
+
+.playbook-step-note {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+.playbook-step-actions {
+  flex-shrink: 0;
+}
+
+.prospect-detail-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.next-action-card {
+  margin-bottom: 16px;
+  border-color: #2563eb;
+}
+
+.next-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.prospect-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prospect-card {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.prospect-card-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.prospect-phone {
+  display: inline-block;
+  margin-top: 8px;
+}
+
+.status-pill {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #334155;
+  margin-top: 4px;
+}
+
+.status-active {
+  background: #14532d;
+  color: #bbf7d0;
+}
+
+.status-converted {
+  background: #1e3a5f;
+  color: #bae6fd;
+}
+
+.status-lost {
+  background: #450a0a;
+  color: #fecaca;
+}
+
+.sticky-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  background: #0f172a;
+  border-top: 1px solid #334155;
+  display: flex;
+  gap: 8px;
+  z-index: 50;
+}
+
+.prospect-detail-page {
+  padding-bottom: 80px;
+}
+
+.celebration-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 24px;
+}
+
+.celebration-card {
+  background: #1e293b;
+  border: 1px solid #38bdf8;
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 360px;
+  width: 100%;
+}
+
+.celebration-emoji {
+  font-size: 48px;
+  margin: 0;
+}
+
+.mobile-page-header {
+  margin-bottom: 16px;
+}
+
+.mobile-page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mobile-back-link {
+  text-decoration: none;
+  color: #38bdf8;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.hide-mobile {
+  display: block;
+}
+
+.hide-desktop {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .layout .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    width: min(280px, 85vw);
+  }
+
+  .layout.nav-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .layout.nav-open .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 150;
+  }
+
+  .layout {
+    flex-direction: column;
+  }
+
+  .main {
+    padding: 12px 16px 24px;
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .hide-desktop {
+    display: block !important;
+  }
+
+  .form-card input,
+  .form-card select,
+  .form-card textarea {
+    max-width: none;
+  }
+
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .hide-desktop {
+    display: none !important;
+  }
+
+  .top-bar {
+    display: none;
+  }
+
+  .prospect-detail-page {
+    padding-bottom: 0;
+  }
+}
+
+.step-guide {
+  margin-top: 8px;
+}
+
+.step-guide-toggle {
+  background: none;
+  border: none;
+  color: #38bdf8;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  text-decoration: underline;
+  min-height: auto;
+}
+
+.step-guide-body {
+  margin-top: 8px;
+  padding: 10px;
+  background: #0f172a;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.step-guide-body ul {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+
+.script-block {
+  margin-top: 8px;
+}
+
+.script-block pre {
+  white-space: pre-wrap;
+  background: #020617;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin: 6px 0;
+}
+
+.guide-step-details {
+  margin-bottom: 12px;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 12px;
+}
+
+.guide-step-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.sales-guide-page .card h2 {
+  font-size: 1.1rem;
+}
+
+.playbook-step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+@media print {
+  .sidebar,
+  .top-bar,
+  .toolbar .btn,
+  .step-guide-toggle {
+    display: none !important;
+  }
+
+  .main {
+    padding: 0;
+  }
+
+  .card {
+    break-inside: avoid;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .sidebar {
+    width: 72px;
+    padding: 12px 8px;
+  }
+
+  .sidebar .brand,
+  .sidebar .navlink,
+  .sidebar-footer .muted {
+    font-size: 11px;
+  }
+
+  .sidebar .navlink {
+    padding: 10px 6px;
+    text-align: center;
+  }
+
+  .main {
+    padding: 16px 20px;
+  }
+}

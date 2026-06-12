@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { BusinessBulkProductsPanel } from '../components/BusinessBulkProductsPanel';
+import { BusinessDemoDataPanel } from '../components/BusinessDemoDataPanel';
 import { PlaybookChecklist } from '../components/PlaybookChecklist';
 import { PlaybookCelebration } from '../components/PlaybookCelebration';
 import { PlaybookProgressRing } from '../components/PlaybookProgressRing';
@@ -89,7 +90,13 @@ export function BusinessDetailPage() {
   const { id } = useParams();
   const { admin } = useAdminAuth();
   const [tab, setTab] = useState<
-    'overview' | 'stores' | 'bulk_products' | 'activity' | 'subscription' | 'invoices'
+    | 'overview'
+    | 'stores'
+    | 'bulk_products'
+    | 'demo_data'
+    | 'activity'
+    | 'subscription'
+    | 'invoices'
   >('overview');
   const [detail, setDetail] = useState<Detail | null>(null);
   const [activity, setActivity] = useState<Activity[]>([]);
@@ -104,6 +111,9 @@ export function BusinessDetailPage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [extendDays, setExtendDays] = useState(14);
   const [subPatchLoading, setSubPatchLoading] = useState(false);
+  const [planTierDraft, setPlanTierDraft] = useState<'basic' | 'standard' | 'enterprise'>('basic');
+  const [baseFeeDraft, setBaseFeeDraft] = useState('3000');
+  const [seatPriceDraft, setSeatPriceDraft] = useState('1000');
   const [newStoreName, setNewStoreName] = useState('');
   const [storeCreateLoading, setStoreCreateLoading] = useState(false);
   const [signupMethodDraft, setSignupMethodDraft] = useState<SignupMethod>('default');
@@ -246,6 +256,13 @@ export function BusinessDetailPage() {
     (async () => {
       const { data } = await api.get<SubExtra>(`/api/admin/businesses/${id}/subscription`);
       setSub(data);
+      const biz = data.business;
+      if (biz) {
+        const tier = (biz.plan_tier as 'basic' | 'standard' | 'enterprise') || 'basic';
+        setPlanTierDraft(tier);
+        setBaseFeeDraft(String(biz.base_fee ?? 3000));
+        setSeatPriceDraft(String(biz.seat_price ?? 1000));
+      }
     })();
   }, [id, tab]);
 
@@ -352,6 +369,44 @@ export function BusinessDetailPage() {
     }
   }
 
+  async function saveSubscriptionPlan() {
+    if (!id) return;
+    setErr(null);
+    setMsg(null);
+    setSubPatchLoading(true);
+    try {
+      const payload: Record<string, unknown> = { plan_tier: planTierDraft };
+      if (planTierDraft === 'enterprise') {
+        const baseFee = Number(baseFeeDraft);
+        const seatPrice = Number(seatPriceDraft);
+        if (!Number.isFinite(baseFee) || baseFee <= 0 || !Number.isFinite(seatPrice) || seatPrice <= 0) {
+          setErr('Enterprise plan requires valid base fee and seat price.');
+          setSubPatchLoading(false);
+          return;
+        }
+        payload.base_fee = baseFee;
+        payload.seat_price = seatPrice;
+      }
+      const { data } = await api.patch<{
+        plan_tier: string;
+        base_fee: number;
+        seat_price: number;
+      }>(`/api/admin/businesses/${id}/subscription`, payload);
+      setMsg(
+        `Plan updated to ${data.plan_tier} (${data.base_fee.toLocaleString()} base, ${data.seat_price.toLocaleString()}/seat).`
+      );
+      await loadDetail();
+      const { data: subData } = await api.get<SubExtra>(`/api/admin/businesses/${id}/subscription`);
+      setSub(subData);
+    } catch (e: unknown) {
+      const ax = e as { response?: { data?: { detail?: string } } };
+      const d = ax.response?.data?.detail;
+      setErr(typeof d === 'string' ? d : 'Failed to update subscription plan.');
+    } finally {
+      setSubPatchLoading(false);
+    }
+  }
+
   async function updateSignupMethod() {
     if (!id) return;
     setErr(null);
@@ -424,6 +479,7 @@ export function BusinessDetailPage() {
             'overview',
             'stores',
             'bulk_products',
+            'demo_data',
             'activity',
             'subscription',
             'invoices',
@@ -435,7 +491,11 @@ export function BusinessDetailPage() {
             className={tab === t ? 'tab active' : 'tab'}
             onClick={() => setTab(t)}
           >
-            {t === 'bulk_products' ? 'bulk products' : t}
+            {t === 'bulk_products'
+              ? 'bulk products'
+              : t === 'demo_data'
+                ? 'demo data'
+                : t}
           </button>
         ))}
       </div>
@@ -643,6 +703,14 @@ export function BusinessDetailPage() {
         <BusinessBulkProductsPanel companyId={id} stores={detail.stores} />
       )}
 
+      {tab === 'demo_data' && id && detail && (
+        <BusinessDemoDataPanel
+          companyId={id}
+          stores={detail.stores}
+          signupMethod={String(detail.company.signup_method ?? 'default')}
+        />
+      )}
+
       {tab === 'stores' && (
         <>
         {admin?.role !== 'billing_readonly' && (
@@ -711,6 +779,16 @@ export function BusinessDetailPage() {
                 <strong>Status:</strong> {String(detail.subscription.status ?? '—')}
               </p>
               <p>
+                <strong>Plan:</strong>{' '}
+                {String(detail.subscription.plan_tier ?? 'basic').replace(/^./, (c) => c.toUpperCase())}
+              </p>
+              <p>
+                <strong>Base fee:</strong> ₦{Number(detail.subscription.base_fee ?? 0).toLocaleString()}/mo
+              </p>
+              <p>
+                <strong>Seat price:</strong> ₦{Number(detail.subscription.seat_price ?? 0).toLocaleString()}/mo
+              </p>
+              <p>
                 <strong>Trial / next billing:</strong>{' '}
                 {detail.subscription.next_billing_date
                   ? new Date(String(detail.subscription.next_billing_date)).toLocaleString()
@@ -720,28 +798,86 @@ export function BusinessDetailPage() {
                 <p className="muted">{setup.trial_days_remaining} days until first charge</p>
               )}
               {admin?.role !== 'billing_readonly' && (
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <label>
-                    Extend trial by
-                    <input
-                      type="number"
-                      min={1}
-                      max={365}
-                      value={extendDays}
-                      onChange={(e) => setExtendDays(Number(e.target.value) || 14)}
-                      style={{ width: 64, marginLeft: 8 }}
-                    />{' '}
-                    days
-                  </label>
-                  <button
-                    type="button"
-                    className="btn primary"
-                    disabled={subPatchLoading}
-                    onClick={() => void extendTrial()}
-                  >
-                    {subPatchLoading ? 'Updating…' : 'Extend trial'}
-                  </button>
-                </div>
+                <>
+                  <div style={{ marginTop: 16, marginBottom: 16 }}>
+                    <h4 style={{ marginBottom: 8 }}>Subscription plan</h4>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                      <label>
+                        Tier
+                        <select
+                          value={planTierDraft}
+                          onChange={(e) =>
+                            setPlanTierDraft(e.target.value as 'basic' | 'standard' | 'enterprise')
+                          }
+                          style={{ display: 'block', marginTop: 4, minWidth: 140 }}
+                        >
+                          <option value="basic">Basic</option>
+                          <option value="standard">Standard</option>
+                          <option value="enterprise">Enterprise</option>
+                        </select>
+                      </label>
+                      {planTierDraft === 'enterprise' && (
+                        <>
+                          <label>
+                            Base fee (₦/mo)
+                            <input
+                              type="number"
+                              min={1}
+                              value={baseFeeDraft}
+                              onChange={(e) => setBaseFeeDraft(e.target.value)}
+                              style={{ display: 'block', marginTop: 4, width: 120 }}
+                            />
+                          </label>
+                          <label>
+                            Seat price (₦/mo)
+                            <input
+                              type="number"
+                              min={1}
+                              value={seatPriceDraft}
+                              onChange={(e) => setSeatPriceDraft(e.target.value)}
+                              style={{ display: 'block', marginTop: 4, width: 120 }}
+                            />
+                          </label>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        className="btn primary"
+                        disabled={subPatchLoading}
+                        onClick={() => void saveSubscriptionPlan()}
+                      >
+                        {subPatchLoading ? 'Saving…' : 'Save plan'}
+                      </button>
+                    </div>
+                    {planTierDraft !== 'enterprise' && (
+                      <p className="muted" style={{ marginTop: 8 }}>
+                        Basic and Standard use fixed rates. Switch tier to apply default pricing.
+                      </p>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <label>
+                      Extend trial by
+                      <input
+                        type="number"
+                        min={1}
+                        max={365}
+                        value={extendDays}
+                        onChange={(e) => setExtendDays(Number(e.target.value) || 14)}
+                        style={{ width: 64, marginLeft: 8 }}
+                      />{' '}
+                      days
+                    </label>
+                    <button
+                      type="button"
+                      className="btn"
+                      disabled={subPatchLoading}
+                      onClick={() => void extendTrial()}
+                    >
+                      {subPatchLoading ? 'Updating…' : 'Extend trial'}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           )}

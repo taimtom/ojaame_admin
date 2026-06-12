@@ -22,6 +22,8 @@ import { ProspectFormPage } from './pages/ProspectFormPage';
 import { ProspectDetailPage } from './pages/ProspectDetailPage';
 import { ConvertProspectPage } from './pages/ConvertProspectPage';
 import { SalesGuidePage } from './pages/SalesGuidePage';
+import { BlogPostsPage } from './pages/BlogPostsPage';
+import { BlogPostFormPage } from './pages/BlogPostFormPage';
 
 export default function App() {
   return (
@@ -91,6 +93,30 @@ export default function App() {
               element={
                 <RoleGuard allow={['super_admin', 'support']}>
                   <CatalogPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="blog"
+              element={
+                <RoleGuard allow={['super_admin', 'support']}>
+                  <BlogPostsPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="blog/new"
+              element={
+                <RoleGuard allow={['super_admin', 'support']}>
+                  <BlogPostFormPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="blog/:id/edit"
+              element={
+                <RoleGuard allow={['super_admin', 'support']}>
+                  <BlogPostFormPage />
                 </RoleGuard>
               }
             />

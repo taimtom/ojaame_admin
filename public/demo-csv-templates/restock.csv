@@ -1,0 +1,2 @@
+product_name,quantity,cost_price,date,add_as_expense,notes
+Example Product,10,1000,2026-01-15,yes,Initial stock

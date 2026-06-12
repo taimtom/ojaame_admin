@@ -1,0 +1,3 @@
+category,expense_type,amount,description,expense_date
+Rent,Operating,50000,Monthly rent,2026-02-01
+Transport,Operating,5000,Delivery fuel,2026-02-10

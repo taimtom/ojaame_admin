@@ -1,0 +1,3 @@
+invoice_ref,sale_date,due_date,customer_name,status,product_name,qty,unit_price,payment_method,payment_amount
+INV-001,2026-02-01,2026-02-01,,paid,Example Product,2,1500,Cash,3000
+INV-002,2026-02-05,2026-03-05,Example Customer Ltd,credit,Example Product,5,1500,,

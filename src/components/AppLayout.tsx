@@ -11,6 +11,7 @@ const nav = [
   { to: '/billing', label: 'Billing', roles: ['super_admin', 'support', 'billing_readonly'] },
   { to: '/agents', label: 'Agents', roles: ['super_admin', 'support', 'billing_readonly'] },
   { to: '/catalog', label: 'Catalog', roles: ['super_admin', 'support'] },
+  { to: '/blog', label: 'Blog', roles: ['super_admin', 'support'] },
   { to: '/agent-withdrawals', label: 'Agent Withdrawals', roles: ['super_admin', 'support'] },
   { to: '/admin-users', label: 'Admin users', roles: ['super_admin'] },
   { to: '/audit-logs', label: 'Audit log', roles: ['super_admin'] },

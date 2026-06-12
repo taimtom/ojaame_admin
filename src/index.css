@@ -112,6 +112,10 @@ h1 {
   font-size: 14px;
 }
 
+.form-card label.rte-field {
+  max-width: none;
+}
+
 .form-card input,
 .form-card select {
   display: block;

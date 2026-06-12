@@ -1,0 +1,21 @@
+Name,Category,Qty,Cost Price,Selling Price,Taxes,Is Pack,Qty per Pack,Cost per Pack,Pack Sell Price,Variable price,Min price,Max price,Input only
+300W Monocrystalline Solar Panel,Solar,0,42000,55000,0,no,,,no,,,no
+5kVA Hybrid Solar Inverter,Solar,0,185000,235000,0,no,,,no,,,no
+200Ah Deep Cycle Battery 12V,Solar,0,95000,125000,0,no,,,no,,,no
+60A PWM Solar Charge Controller,Solar,0,8500,13500,0,no,,,no,,,no
+4MP IP Dome CCTV Camera,CCTV and Security,0,8500,14500,0,no,,,no,,,no
+8CH DVR 1TB,CCTV and Security,0,32000,45000,0,no,,,no,,,no
+32 inch CCTV Monitor,CCTV and Security,0,28000,38000,0,no,,,no,,,no
+PIR Motion Sensor Wired,CCTV and Security,0,1200,2200,0,no,,,no,,,no
+Door Magnetic Lock 280kg,CCTV and Security,0,6500,10500,0,no,,,no,,,no
+Samsung 43 inch Smart TV,Electronics,0,185000,235000,0,no,,,no,,,no
+LG 55 inch UHD Smart TV,Electronics,0,320000,395000,0,no,,,no,,,no
+TP-Link Archer C6 Router,Electronics,0,8500,12500,0,no,,,no,,,no
+Anker 20000mAh Power Bank,Electronics,0,6500,9500,0,no,,,no,,,no
+Redmi Note 13 128GB,Electronics,0,72000,92000,0,no,,,no,,,no
+USB-C Fast Charger 25W,Cables and Accessories,0,1200,2500,0,no,,,no,,,no
+HDMI Cable 2m,Cables and Accessories,0,350,800,0,no,,,no,,,no
+Cat6 Cable 305m Box,Cables and Accessories,0,18500,26000,0,yes,305,18500,26000,no,,,no
+CCTV Installation Labour,Services,100,0,15000,0,no,,,no,,,no
+Solar System Installation Labour,Services,100,0,25000,0,no,,,no,,,no
+Site Survey and Design Fee,Services,100,0,8000,0,no,,,no,,,no

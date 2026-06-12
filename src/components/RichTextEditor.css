@@ -1,0 +1,104 @@
+.rte {
+  width: 100%;
+  max-width: none;
+  margin-top: 4px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #0f172a;
+  overflow: hidden;
+}
+
+.rte-loading {
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #0f172a;
+}
+
+.rte-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid #334155;
+  background: #1e293b;
+}
+
+.rte-btn {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #e2e8f0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.rte-btn:hover:not(:disabled) {
+  background: #334155;
+}
+
+.rte-btn.active {
+  background: #0f172a;
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.rte-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rte-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 0 4px;
+  background: #334155;
+}
+
+.rte-content .tiptap {
+  min-height: var(--rte-min-height, 280px);
+  padding: 12px 14px;
+  outline: none;
+  color: #e2e8f0;
+  line-height: 1.6;
+}
+
+.rte-content .tiptap > * + * {
+  margin-top: 0.75em;
+}
+
+.rte-content .tiptap h2 {
+  font-size: 1.35rem;
+  margin-top: 1em;
+}
+
+.rte-content .tiptap h3 {
+  font-size: 1.15rem;
+  margin-top: 0.85em;
+}
+
+.rte-content .tiptap ul,
+.rte-content .tiptap ol {
+  padding-left: 1.5em;
+}
+
+.rte-content .tiptap blockquote {
+  margin: 0;
+  padding-left: 1em;
+  border-left: 3px solid #38bdf8;
+  color: #94a3b8;
+}
+
+.rte-content .tiptap a {
+  color: #38bdf8;
+  text-decoration: underline;
+}
+
+.rte-content .tiptap p.is-editor-empty:first-child::before {
+  color: #64748b;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
